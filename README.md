@@ -1,6 +1,6 @@
 # jev-clean
 
-**Interpretable Data Auto-Cleaner** is an experimental, decision-first data
+**jev-clean** is an experimental, decision-first data
 cleaning system powered by [Jev](https://docs.typesafe.ai/introduction). Instead
 of asking a model to rewrite data directly, jev-clean computes bounded repair
 candidates locally and uses Jev to assess whether each candidate is applicable
