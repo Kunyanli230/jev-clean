@@ -278,3 +278,7 @@ jev-clean v0.1 is experimental. Its audit and rollback mechanisms are designed f
 inspection, but the software has not been certified for production or
 high-stakes data processing. Review configuration, policy thresholds, and
 generated changes before using results in downstream systems.
+
+## License
+
+jev-clean is available under the [MIT License](LICENSE).
