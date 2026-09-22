@@ -1,0 +1,72 @@
+# IDAC demo configuration.
+# The configuration is a data-authorization declaration: it fixes column types,
+# business meaning, null tokens, ranges, date formats, protected columns,
+# allowed operations and the exact-duplicate comparison columns.
+table_description: >-
+  Customer profile table used by the IDAC course demo: one record per unique
+  customer, with an immutable zero-padded identifier, a free-text name, an
+  integer age, a categorical city, a decimal income and a signup date.
+record_grain: >-
+  One row per unique customer profile. Rows that are exactly equal on all
+  compare columns are redundant copies of the same business record.
+
+columns:
+  customer_id:
+    type: string
+    description: >-
+      Stable customer identifier stored as a zero-padded string. It is
+      protected: no cleaning operation may rewrite it.
+    protected: true
+    null_tokens: [""]
+    allowed_operations: []
+  name:
+    type: string
+    description: >-
+      Customer display name (free text). Missing names are left missing; no
+      representative value is substituted for personal names.
+    protected: false
+    null_tokens: ["", "NA", "NULL", "N/A", "unknown"]
+    allowed_operations: [trim_whitespace, normalize_null_tokens]
+  age:
+    type: integer
+    description: >-
+      Customer age in whole years. The declared business range is 18 to 100;
+      values outside the range are invalid measurements.
+    min_value: 18
+    max_value: 100
+    null_tokens: ["", "NA", "NULL", "N/A", "unknown"]
+    allowed_operations:
+      [trim_whitespace, normalize_null_tokens, cast_numeric, invalidate_out_of_range, impute_missing]
+  city:
+    type: categorical
+    description: >-
+      Customer city of residence. Only the declared city values are valid
+      categories; missing cities may be filled with the most frequent category.
+    allowed_values: ["Berlin", "Hamburg", "Munich", "Cologne", "Frankfurt"]
+    null_tokens: ["", "NA", "NULL", "N/A", "unknown"]
+    allowed_operations: [trim_whitespace, normalize_null_tokens, impute_missing]
+  income:
+    type: decimal
+    description: >-
+      Annual gross income in EUR with at most two decimal places. The declared
+      business range is 0 to 1,000,000; values outside the range are invalid.
+    decimal_places: 2
+    thousands_separator: ","
+    min_value: 0
+    max_value: 1000000
+    null_tokens: ["", "NA", "NULL", "N/A", "unknown"]
+    allowed_operations:
+      [trim_whitespace, normalize_null_tokens, cast_numeric, invalidate_out_of_range, impute_missing]
+  signup_date:
+    type: date
+    description: >-
+      Date the customer signed up. Two input formats are declared and are
+      converted to ISO YYYY-MM-DD; a value that parses to two different dates is
+      ambiguous and is never converted automatically.
+    date_formats: ["%d/%m/%Y", "%m/%d/%Y"]
+    null_tokens: [""]
+    allowed_operations: [trim_whitespace, normalize_null_tokens, parse_datetime]
+
+duplicates:
+  enabled: true
+  compare_columns: [customer_id, name, age, city, income, signup_date]

@@ -1,0 +1,563 @@
+{
+  "seed": 42,
+  "truth_row_count": 200,
+  "dirty_row_count": 210,
+  "ambiguous_date_row_id": "row-000070",
+  "ambiguous_date_dirty_value": "03/04/2024",
+  "ambiguous_date_truth_value": "2024-04-03",
+  "iqr_high_income_row_id": "row-000080",
+  "duplicate_sources": {
+    "row-000200": "row-000001",
+    "row-000201": "row-000012",
+    "row-000202": "row-000021",
+    "row-000203": "row-000033",
+    "row-000204": "row-000045",
+    "row-000205": "row-000052",
+    "row-000206": "row-000063",
+    "row-000207": "row-000068",
+    "row-000208": "row-000075",
+    "row-000209": "row-000082"
+  },
+  "entries": [
+    {
+      "row_id": "row-000000",
+      "customer_id": "00001",
+      "column": "name",
+      "corruption_type": "whitespace",
+      "dirty_value": "  Ulf Dorn ",
+      "truth_value": "Ulf Dorn",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000001",
+      "customer_id": "00002",
+      "column": "name",
+      "corruption_type": "whitespace",
+      "dirty_value": "  Xaver Dorn ",
+      "truth_value": "Xaver Dorn",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000002",
+      "customer_id": "00003",
+      "column": "name",
+      "corruption_type": "whitespace",
+      "dirty_value": "  Anna Christ ",
+      "truth_value": "Anna Christ",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000003",
+      "customer_id": "00004",
+      "column": "name",
+      "corruption_type": "whitespace",
+      "dirty_value": "  Rosa Graf ",
+      "truth_value": "Rosa Graf",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000004",
+      "customer_id": "00005",
+      "column": "name",
+      "corruption_type": "whitespace",
+      "dirty_value": "  Ida Albrecht ",
+      "truth_value": "Ida Albrecht",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000005",
+      "customer_id": "00006",
+      "column": "name",
+      "corruption_type": "whitespace",
+      "dirty_value": "  Greta Keller ",
+      "truth_value": "Greta Keller",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000006",
+      "customer_id": "00007",
+      "column": "city",
+      "corruption_type": "whitespace",
+      "dirty_value": " Berlin  ",
+      "truth_value": "Berlin",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000007",
+      "customer_id": "00008",
+      "column": "city",
+      "corruption_type": "whitespace",
+      "dirty_value": " Frankfurt  ",
+      "truth_value": "Frankfurt",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000008",
+      "customer_id": "00009",
+      "column": "city",
+      "corruption_type": "whitespace",
+      "dirty_value": " Berlin  ",
+      "truth_value": "Berlin",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000009",
+      "customer_id": "00010",
+      "column": "city",
+      "corruption_type": "whitespace",
+      "dirty_value": " Hamburg  ",
+      "truth_value": "Hamburg",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000010",
+      "customer_id": "00011",
+      "column": "age",
+      "corruption_type": "null_token",
+      "dirty_value": "NA",
+      "truth_value": "64",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000011",
+      "customer_id": "00012",
+      "column": "age",
+      "corruption_type": "null_token",
+      "dirty_value": "NA",
+      "truth_value": "27",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000012",
+      "customer_id": "00013",
+      "column": "age",
+      "corruption_type": "null_token",
+      "dirty_value": "NA",
+      "truth_value": "38",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000013",
+      "customer_id": "00014",
+      "column": "age",
+      "corruption_type": "null_token",
+      "dirty_value": "NA",
+      "truth_value": "46",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000014",
+      "customer_id": "00015",
+      "column": "city",
+      "corruption_type": "null_token",
+      "dirty_value": "unknown",
+      "truth_value": "Cologne",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000015",
+      "customer_id": "00016",
+      "column": "city",
+      "corruption_type": "null_token",
+      "dirty_value": "unknown",
+      "truth_value": "Hamburg",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000016",
+      "customer_id": "00017",
+      "column": "city",
+      "corruption_type": "null_token",
+      "dirty_value": "unknown",
+      "truth_value": "Munich",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000017",
+      "customer_id": "00018",
+      "column": "income",
+      "corruption_type": "null_token",
+      "dirty_value": "N/A",
+      "truth_value": "86907.08",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000020",
+      "customer_id": "00021",
+      "column": "income",
+      "corruption_type": "numeric_format",
+      "dirty_value": "63,969.19",
+      "truth_value": "63969.19",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000021",
+      "customer_id": "00022",
+      "column": "income",
+      "corruption_type": "numeric_format",
+      "dirty_value": "141,386.06",
+      "truth_value": "141386.06",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000022",
+      "customer_id": "00023",
+      "column": "income",
+      "corruption_type": "numeric_format",
+      "dirty_value": "49,514.45",
+      "truth_value": "49514.45",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000023",
+      "customer_id": "00024",
+      "column": "income",
+      "corruption_type": "numeric_format",
+      "dirty_value": "143,104.14",
+      "truth_value": "143104.14",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000024",
+      "customer_id": "00025",
+      "column": "income",
+      "corruption_type": "numeric_format",
+      "dirty_value": "119,390.38",
+      "truth_value": "119390.38",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000025",
+      "customer_id": "00026",
+      "column": "income",
+      "corruption_type": "numeric_format",
+      "dirty_value": "167,366.49",
+      "truth_value": "167366.49",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000026",
+      "customer_id": "00027",
+      "column": "income",
+      "corruption_type": "numeric_format",
+      "dirty_value": "169,010.29",
+      "truth_value": "169010.29",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000027",
+      "customer_id": "00028",
+      "column": "income",
+      "corruption_type": "numeric_format",
+      "dirty_value": "171,777.16",
+      "truth_value": "171777.16",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000028",
+      "customer_id": "00029",
+      "column": "income",
+      "corruption_type": "numeric_format",
+      "dirty_value": "143,704.34",
+      "truth_value": "143704.34",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000029",
+      "customer_id": "00030",
+      "column": "income",
+      "corruption_type": "numeric_format",
+      "dirty_value": "66,083.78",
+      "truth_value": "66083.78",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000030",
+      "customer_id": "00031",
+      "column": "age",
+      "corruption_type": "numeric_missing",
+      "dirty_value": "",
+      "truth_value": "87",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000031",
+      "customer_id": "00032",
+      "column": "age",
+      "corruption_type": "numeric_missing",
+      "dirty_value": "",
+      "truth_value": "65",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000032",
+      "customer_id": "00033",
+      "column": "age",
+      "corruption_type": "numeric_missing",
+      "dirty_value": "",
+      "truth_value": "46",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000033",
+      "customer_id": "00034",
+      "column": "age",
+      "corruption_type": "numeric_missing",
+      "dirty_value": "",
+      "truth_value": "46",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000034",
+      "customer_id": "00035",
+      "column": "age",
+      "corruption_type": "numeric_missing",
+      "dirty_value": "",
+      "truth_value": "26",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000035",
+      "customer_id": "00036",
+      "column": "income",
+      "corruption_type": "numeric_missing",
+      "dirty_value": "",
+      "truth_value": "58206.71",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000036",
+      "customer_id": "00037",
+      "column": "income",
+      "corruption_type": "numeric_missing",
+      "dirty_value": "",
+      "truth_value": "146616.01",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000037",
+      "customer_id": "00038",
+      "column": "income",
+      "corruption_type": "numeric_missing",
+      "dirty_value": "",
+      "truth_value": "79916.12",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000038",
+      "customer_id": "00039",
+      "column": "income",
+      "corruption_type": "numeric_missing",
+      "dirty_value": "",
+      "truth_value": "34394.96",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000039",
+      "customer_id": "00040",
+      "column": "income",
+      "corruption_type": "numeric_missing",
+      "dirty_value": "",
+      "truth_value": "54482.38",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000040",
+      "customer_id": "00041",
+      "column": "city",
+      "corruption_type": "categorical_missing",
+      "dirty_value": "",
+      "truth_value": "Munich",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000041",
+      "customer_id": "00042",
+      "column": "city",
+      "corruption_type": "categorical_missing",
+      "dirty_value": "",
+      "truth_value": "Berlin",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000042",
+      "customer_id": "00043",
+      "column": "city",
+      "corruption_type": "categorical_missing",
+      "dirty_value": "",
+      "truth_value": "Hamburg",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000043",
+      "customer_id": "00044",
+      "column": "city",
+      "corruption_type": "categorical_missing",
+      "dirty_value": "",
+      "truth_value": "Hamburg",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000044",
+      "customer_id": "00045",
+      "column": "city",
+      "corruption_type": "categorical_missing",
+      "dirty_value": "",
+      "truth_value": "Cologne",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000050",
+      "customer_id": "00051",
+      "column": "age",
+      "corruption_type": "out_of_range",
+      "dirty_value": "3",
+      "truth_value": "23",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000051",
+      "customer_id": "00052",
+      "column": "age",
+      "corruption_type": "out_of_range",
+      "dirty_value": "130",
+      "truth_value": "84",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000052",
+      "customer_id": "00053",
+      "column": "age",
+      "corruption_type": "out_of_range",
+      "dirty_value": "999",
+      "truth_value": "58",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000053",
+      "customer_id": "00054",
+      "column": "age",
+      "corruption_type": "out_of_range",
+      "dirty_value": "0",
+      "truth_value": "56",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000054",
+      "customer_id": "00055",
+      "column": "age",
+      "corruption_type": "out_of_range",
+      "dirty_value": "200",
+      "truth_value": "90",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000060",
+      "customer_id": "00061",
+      "column": "signup_date",
+      "corruption_type": "date_format_dmy",
+      "dirty_value": "25/10/2020",
+      "truth_value": "2020-10-25",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000061",
+      "customer_id": "00062",
+      "column": "signup_date",
+      "corruption_type": "date_format_dmy",
+      "dirty_value": "28/09/2021",
+      "truth_value": "2021-09-28",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000062",
+      "customer_id": "00063",
+      "column": "signup_date",
+      "corruption_type": "date_format_dmy",
+      "dirty_value": "21/03/2024",
+      "truth_value": "2024-03-21",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000063",
+      "customer_id": "00064",
+      "column": "signup_date",
+      "corruption_type": "date_format_dmy",
+      "dirty_value": "13/10/2025",
+      "truth_value": "2025-10-13",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000064",
+      "customer_id": "00065",
+      "column": "signup_date",
+      "corruption_type": "date_format_dmy",
+      "dirty_value": "30/08/2019",
+      "truth_value": "2019-08-30",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000065",
+      "customer_id": "00066",
+      "column": "signup_date",
+      "corruption_type": "date_format_mdy",
+      "dirty_value": "06/13/2018",
+      "truth_value": "2018-06-13",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000066",
+      "customer_id": "00067",
+      "column": "signup_date",
+      "corruption_type": "date_format_mdy",
+      "dirty_value": "04/24/2024",
+      "truth_value": "2024-04-24",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000067",
+      "customer_id": "00068",
+      "column": "signup_date",
+      "corruption_type": "date_format_mdy",
+      "dirty_value": "12/27/2019",
+      "truth_value": "2019-12-27",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000068",
+      "customer_id": "00069",
+      "column": "signup_date",
+      "corruption_type": "date_format_mdy",
+      "dirty_value": "08/14/2022",
+      "truth_value": "2022-08-14",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000069",
+      "customer_id": "00070",
+      "column": "signup_date",
+      "corruption_type": "date_format_mdy",
+      "dirty_value": "11/24/2025",
+      "truth_value": "2025-11-24",
+      "recoverable_by_rule": true
+    },
+    {
+      "row_id": "row-000070",
+      "customer_id": "00071",
+      "column": "signup_date",
+      "corruption_type": "ambiguous_date",
+      "dirty_value": "03/04/2024",
+      "truth_value": "2024-04-03",
+      "recoverable_by_rule": false
+    },
+    {
+      "row_id": "row-000080",
+      "customer_id": "00081",
+      "column": "income",
+      "corruption_type": "iqr_high_income",
+      "dirty_value": "950000.00",
+      "truth_value": "950000.00",
+      "recoverable_by_rule": false
+    }
+  ]
+}
