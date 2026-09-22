@@ -1,8 +1,8 @@
-# IDAC
+# jev-clean
 
 **Interpretable Data Auto-Cleaner** is an experimental, decision-first data
 cleaning system powered by [Jev](https://docs.typesafe.ai/introduction). Instead
-of asking a model to rewrite data directly, IDAC computes bounded repair
+of asking a model to rewrite data directly, jev-clean computes bounded repair
 candidates locally and uses Jev to assess whether each candidate is applicable
 and semantically safe.
 
@@ -10,13 +10,13 @@ Version **0.1.0** is the first public development release. It focuses on
 auditable CSV cleaning, conservative automation, deterministic execution, and
 offline-replayable model decisions.
 
-> IDAC is an independent project built with the TypeSafe SDK. It is
+> jev-clean is an independent project built with the TypeSafe SDK. It is
 > not an official TypeSafe product.
 
-## Why IDAC?
+## Why jev-clean?
 
 Most data-cleaning pipelines are either fully rule-based or difficult to audit
-once a model is involved. IDAC separates computation from judgment:
+once a model is involved. jev-clean separates computation from judgment:
 
 1. deterministic profilers identify issues;
 2. local code produces exact, finite repair candidates;
@@ -48,7 +48,7 @@ final commit status.
 - Roll back to any committed snapshot without calling the model.
 - Compare a Jev-guided run with a deterministic rule baseline.
 
-Current limits are 10,000 rows and 30 columns per input. IDAC v0.1 intentionally
+Current limits are 10,000 rows and 30 columns per input. jev-clean v0.1 intentionally
 does not perform fuzzy entity matching, free-text completion, unit conversion,
 model training, or direct database mutation.
 
@@ -91,7 +91,7 @@ The project pins typesafe-sdk 0.7.1 and uses jev-1.13.0.
 ## Installation
 
 ~~~bash
-cd IDAC
+cd jev-clean
 uv sync --locked
 uv run idac --help
 ~~~
@@ -99,7 +99,7 @@ uv run idac --help
 For the existing WSL development environment:
 
 ~~~powershell
-wsl -d COMP5584HDC --cd /home/hdc/projects/IDAC
+wsl -d COMP5584HDC --cd /home/hdc/projects/jev-clean
 ~~~
 
 Verify the local toolchain without making an API request:
@@ -112,7 +112,7 @@ uv run ruff check src tests examples scripts
 
 ## Configure Jev
 
-IDAC reads the TypeSafe credential from TYPESAFE_API_KEY. To enter it for the
+jev-clean reads the TypeSafe credential from TYPESAFE_API_KEY. To enter it for the
 current shell without placing the value in shell history:
 
 ~~~bash
@@ -121,7 +121,7 @@ echo
 export TYPESAFE_API_KEY
 ~~~
 
-.env.example documents the required variable, but IDAC does not automatically
+.env.example documents the required variable, but jev-clean does not automatically
 load environment files. Never commit an API key. The clean command stops when
 the key is absent; it never silently substitutes a fake client or the rule
 baseline.
@@ -200,7 +200,7 @@ See [configs/demo.yaml](configs/demo.yaml) for a complete example.
 
 ## Decision policy
 
-IDAC records complete model outputs rather than reducing them to one label.
+jev-clean records complete model outputs rather than reducing them to one label.
 For each candidate, the policy evaluates:
 
 - the selected action and its SDK confidence;
@@ -212,7 +212,7 @@ For each candidate, the policy evaluates:
 - deterministic eligibility checks tied to the current snapshot.
 
 Thresholds are versioned in src/idac/settings.py and copied into every decision
-record. They are IDAC policy defaults, not TypeSafe accuracy guarantees. An
+record. They are jev-clean policy defaults, not TypeSafe accuracy guarantees. An
 abstention is a normal safety outcome, not a pipeline failure.
 
 ## Run artifacts
@@ -274,7 +274,7 @@ and document any change to decision semantics or policy thresholds.
 
 ## Project status
 
-IDAC v0.1 is experimental. Its audit and rollback mechanisms are designed for
+jev-clean v0.1 is experimental. Its audit and rollback mechanisms are designed for
 inspection, but the software has not been certified for production or
 high-stakes data processing. Review configuration, policy thresholds, and
 generated changes before using results in downstream systems.
