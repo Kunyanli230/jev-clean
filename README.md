@@ -126,6 +126,15 @@ load environment files. Never commit an API key. The clean command stops when
 the key is absent; it never silently substitutes a fake client or the rule
 baseline.
 
+### Data sent to TypeSafe
+
+Live Jev decisions send bounded candidate metadata, table and column
+descriptions, evidence summaries, and limited before/after samples to the
+TypeSafe API. Semantic postchecks send bounded samples of proposed changes.
+The complete CSV, immutable snapshots, audit history, and generated reports
+remain local. Review the configured descriptions and sampled values before
+using live mode with sensitive data.
+
 ## Quick start
 
 The repository includes a reproducible demo dataset and configuration:
