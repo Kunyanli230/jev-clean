@@ -1,293 +1,169 @@
-# jev-clean
+# Jev Clean
 
-**jev-clean** is an experimental, decision-first data
-cleaning system powered by [Jev](https://docs.typesafe.ai/introduction). Instead
-of asking a model to rewrite data directly, jev-clean computes bounded repair
-candidates locally and uses Jev to assess whether each candidate is applicable
-and semantically safe.
+<p align="center">
+  <img src="./assets/readme/decision-gate.svg" width="100%" alt="Jev Clean: local repair candidates are judged with explicit Jev probabilities. A synthetic risk example shows why the highest-risk probability matters even when two options have the same expected risk.">
+</p>
 
-Version **0.1.0** is the first public development release. It focuses on
-auditable CSV cleaning, conservative automation, deterministic execution, and
-offline-replayable model decisions.
+**Decision-first CSV cleaning with an inspectable reason to apply—or abstain.**
+Jev Clean builds bounded repair candidates in local code, asks
+[Jev](https://docs.typesafe.ai/introduction) for explicit action,
+applicability and semantic-risk distributions, then uses a fixed policy to
+decide what may be applied. The model neither writes executable repairs nor
+mutates the source CSV.
 
-> jev-clean is an independent project built with the TypeSafe SDK. It is
-> not an official TypeSafe product.
+`v0.1.0 experimental` · Python 3.11 · MIT · [independent project](#status-and-scope)
 
-## Why jev-clean?
+## Why keep the full distribution?
 
-Most data-cleaning pipelines are either fully rule-based or difficult to audit
-once a model is involved. jev-clean separates computation from judgment:
+The two **synthetic** risk distributions below have the same expected level,
+`E[risk] = 0.40`, on Jev Clean's ordered `0 / 1 / 2` scale:
 
-1. deterministic profilers identify issues;
-2. local code produces exact, finite repair candidates;
-3. Jev returns explicit probability distributions for action, applicability,
-   and semantic risk;
-4. a fixed policy gate accepts or abstains;
-5. a deterministic executor applies accepted candidates to a copy;
-6. hard and semantic validation decide whether to commit or reject the batch.
+- **A:** `P(0, 1, 2) = (0.60, 0.40, 0.00)` — the risk checks pass.
+- **B:** `P(0, 1, 2) = (0.80, 0.00, 0.20)` — the policy abstains because
+  `P(high risk) = 0.20` exceeds the `0.10` limit.
 
-The model never generates executable code or arbitrary mutations. Every
-candidate—accepted, rejected, or abstained—receives a decision record containing
-its evidence, complete distributions, expected risk level, policy checks, and
-final commit status.
+These are a policy illustration, **not live Jev measurements**. An expected
+score alone hides the high-risk tail; Jev Clean saves the full distribution,
+the recomputed expectation, each threshold comparison and the final status.
+Other eligibility and applicability checks must also pass before any repair
+is committed.
 
-## v0.1 capabilities
+A [recorded live demo](docs/implementation_status.md) on 2026-09-22 produced
+10 candidates, 6 committed decisions and 4 abstentions, with an overall
+`partial` outcome. The rule baseline repaired more of that demo dataset.
+These observations show inspectability, not calibrated accuracy or superiority;
+live model decisions can vary between runs.
 
-- Clean one UTF-8 CSV with a required YAML schema and policy configuration.
-- Handle whitespace, declared null tokens, numeric formats, declared date
-  formats, exact duplicates, declared-range violations, and bounded
-  median/mode imputation.
-- Route candidates to standardization, duplicate, outlier, and missing-value
-  decision agents.
-- Preserve full Jev Choice, Noul, and ordered Score results.
-- Gate repairs on confidence, applicability, expected risk, and high-risk
-  probability.
-- Validate actual snapshot diffs independently from executor logs.
-- Commit immutable versioned snapshots or reject the entire candidate batch.
-- Replay decisions offline while verifying saved request evidence and hashes.
-- Roll back to any committed snapshot without calling the model.
-- Compare a Jev-guided run with a deterministic rule baseline.
+## Run the demo
 
-Current limits are 10,000 rows and 30 columns per input. jev-clean v0.1 intentionally
-does not perform fuzzy entity matching, free-text completion, unit conversion,
-model training, or direct database mutation.
+Install [uv](https://docs.astral.sh/uv/) and use Python 3.11:
 
-## Architecture
-
-~~~text
-CSV + YAML configuration
-        |
-        v
-Deterministic profiler and candidate builders
-        |
-        v
-Issue router -> four specialized decision agents
-        |
-        v
-Jev distributions -> deterministic policy gate
-        |
-        v
-Repair planner -> deterministic executor
-        |
-        v
-Hard validator -> Jev semantic postcheck
-        |
-        +---- pass ----> commit immutable snapshot
-        |
-        +---- fail ----> reject batch and retain original values
-~~~
-
-See [docs/architecture.md](docs/architecture.md) for component boundaries,
-decision flow, storage, budgets, and replay behavior.
-
-## Requirements
-
-- Python 3.11
-- [uv](https://docs.astral.sh/uv/)
-- A TypeSafe API key for live Jev decisions
-
-The project pins typesafe-sdk 0.7.1 and uses jev-1.13.0.
-
-## Installation
-
-~~~bash
+```bash
+git clone https://github.com/Kunyanli230/jev-clean.git
 cd jev-clean
 uv sync --locked
 uv run idac --help
-~~~
+```
 
-For the existing WSL development environment:
+The public project name is **Jev Clean**. The v0.1 Python package and CLI
+remain `idac`, so the commands below use that executable.
 
-~~~powershell
-wsl -d COMP5584HDC --cd /home/hdc/projects/jev-clean
-~~~
+The Jev-guided clean requires a TypeSafe API key. In Bash or WSL, enter it
+without adding its value to shell history:
 
-Verify the local toolchain without making an API request:
-
-~~~bash
-uv run python scripts/check_environment.py
-uv run pytest -q
-uv run ruff check src tests examples scripts
-~~~
-
-## Configure Jev
-
-jev-clean reads the TypeSafe credential from TYPESAFE_API_KEY. To enter it for the
-current shell without placing the value in shell history:
-
-~~~bash
+```bash
 read -rsp 'TypeSafe API key: ' TYPESAFE_API_KEY
 echo
 export TYPESAFE_API_KEY
-~~~
 
-.env.example documents the required variable, but jev-clean does not automatically
-load environment files. Never commit an API key. The clean command stops when
-the key is absent; it never silently substitutes a fake client or the rule
-baseline.
-
-### Data sent to TypeSafe
-
-Live Jev decisions send bounded candidate metadata, table and column
-descriptions, evidence summaries, and limited before/after samples to the
-TypeSafe API. Semantic postchecks send bounded samples of proposed changes.
-The complete CSV, immutable snapshots, audit history, and generated reports
-remain local. Review the configured descriptions and sampled values before
-using live mode with sensitive data.
-
-## Quick start
-
-The repository includes a reproducible demo dataset and configuration:
-
-~~~bash
 uv run idac clean \
   --input examples/data/dirty.csv \
   --config configs/demo.yaml \
-  --output runs/my-first-run
+  --output runs/first-run
 
-uv run idac inspect --run runs/my-first-run
+uv run idac inspect --run runs/first-run
+unset TYPESAFE_API_KEY
+```
 
+Open `runs/first-run/report.md` and `runs/first-run/decision_cards.md` to
+inspect the outcomes and per-candidate evidence. `cleaned.csv` is an export
+of the committed snapshot; the input file is never overwritten. Choose a new
+output path for each run. Live API calls consume provider quota and may incur
+charges.
+
+Without an API key, run the **rule-only baseline** instead. It uses the local
+candidate builders and validator but makes no Jev calls and has no probability
+decision records:
+
+```bash
+uv run python examples/run_baseline.py --output runs/baseline-local
+```
+
+## How a repair reaches the output
+
+1. A YAML schema authorizes operations per column. Profilers find issues and
+   local code creates finite, exact candidate changes.
+2. Four role agents route standardization, duplicate, outlier and missing-value
+   candidates to Jev `Choice`, `Noul` and ordered `Score` questions.
+3. A deterministic gate checks eligibility, choice confidence,
+   `P(applicable)`, expected risk and highest-risk probability. Uncertain or
+   invalid answers abstain instead of being silently normalized.
+4. The planner and executor apply accepted candidates to a copy. Independent
+   hard validation and a Jev semantic postcheck decide whether the batch
+   becomes a versioned snapshot or is rejected.
+5. Run artifacts keep the distributions, request evidence, policy values,
+   actual changes and audit trail. Decisions can be replayed offline; a
+   committed snapshot can be restored without contacting Jev.
+
+See the [architecture](docs/architecture.md) for phase ordering, dependency
+blocking, budgets and exact component boundaries. The coordinator and
+executor are deterministic code, not extra model agents.
+
+## What v0.1 handles
+
+- One UTF-8 CSV, up to 10,000 rows and 30 columns, with a required
+  [YAML configuration](configs/demo.yaml).
+- Whitespace and declared null tokens; numeric and declared date formats;
+  exact duplicates; declared range violations; bounded median/mode imputation.
+- Protected columns and per-column operation allowlists. Unknown configuration
+  fields are rejected.
+- Versioned snapshots, rollback, offline policy replay, and comparison with a
+  deterministic rule baseline.
+
+It does not perform fuzzy entity matching, free-text completion, unit
+conversion, model training or direct database mutation. IQR outlier flags are
+informational; they do not rewrite values by themselves.
+
+## Inspect, evaluate and restore
+
+```bash
+uv run idac inspect --run runs/first-run --candidate-id CANDIDATE_ID
 uv run idac evaluate \
-  --run runs/my-first-run \
+  --run runs/first-run \
   --truth examples/data/ground_truth.csv
-~~~
+uv run idac rollback --run runs/first-run --to-version v000
+```
 
-To inspect a complete decision card:
+`evaluate` uses ground truth only after cleaning; truth is not sent to Jev or
+used to generate candidates. `rollback` changes the run's current snapshot,
+not the original CSV. Each run keeps `decisions.jsonl`, `decision_traces.jsonl`,
+`requests/`, `snapshots/`, `audit.jsonl` and human-readable reports. Missing or
+modified request evidence makes offline replay non-replayable rather than
+silently passing.
 
-~~~bash
-uv run idac inspect \
-  --run runs/my-first-run \
-  --candidate-id CANDIDATE_ID
-~~~
+## Data and decision boundaries
 
-To restore a committed snapshot without contacting Jev:
+Live calls send bounded candidate metadata, field descriptions, evidence
+summaries and limited before/after samples to TypeSafe. The complete CSV,
+snapshots and generated reports remain local. Review descriptions and sampled
+values before using sensitive data. The `.env.example` file documents
+`TYPESAFE_API_KEY`, but Jev Clean does not automatically load `.env` files.
 
-~~~bash
-uv run idac rollback --run runs/my-first-run --to-version v000
-~~~
+The current implementation pins `typesafe-sdk 0.7.1` and the model ID
+`jev-1.13.0`; this is not a claim that it is the latest model. Policy
+thresholds are versioned in `src/idac/settings.py` and copied into decision
+records. They are conservative project defaults, **not calibrated accuracy
+guarantees**. A successful process exit or a committed snapshot is not proof
+that every repaired value is correct.
 
-Output directories must not already exist. The source CSV is never overwritten.
+## Develop
 
-## Configuration
-
-The YAML configuration describes table semantics and explicitly authorizes
-operations per column:
-
-~~~yaml
-table_description: Customer profile table
-record_grain: One row per customer
-
-columns:
-  customer_id:
-    type: string
-    description: Stable customer identifier
-    protected: true
-    null_tokens: [""]
-    allowed_operations: []
-
-  age:
-    type: integer
-    description: Customer age in years
-    min_value: 18
-    max_value: 100
-    null_tokens: ["", "NA"]
-    allowed_operations:
-      - trim_whitespace
-      - normalize_null_tokens
-      - cast_numeric
-      - invalidate_out_of_range
-      - impute_missing
-
-duplicates:
-  enabled: true
-  compare_columns: [customer_id]
-~~~
-
-Unknown configuration fields are rejected. Protected columns cannot be
-modified, and an operation not listed for a column cannot enter a repair plan.
-See [configs/demo.yaml](configs/demo.yaml) for a complete example.
-
-## Decision policy
-
-jev-clean records complete model outputs rather than reducing them to one label.
-For each candidate, the policy evaluates:
-
-- the selected action and its SDK confidence;
-- P(applicable) from a Jev Noul answer;
-- P(risk level = 0/1/2) from an ordered Score answer;
-- the recomputed expected risk level;
-- the probability mass assigned to the highest-risk level;
-- agreement between the SDK score and the locally recomputed expectation;
-- deterministic eligibility checks tied to the current snapshot.
-
-Thresholds are versioned in src/idac/settings.py and copied into every decision
-record. They are jev-clean policy defaults, not TypeSafe accuracy guarantees. An
-abstention is a normal safety outcome, not a pipeline failure.
-
-## Run artifacts
-
-Each run is a self-contained audit bundle:
-
-~~~text
-manifest.json          current version, model identity, outcome
-cleaned.csv            export of the current committed snapshot
-removed_rows.csv       removed duplicate rows
-issues.json            detected and unresolved issues
-decisions.jsonl        distributions and gate decisions
-decision_traces.jsonl  planner, validation, and commit outcomes
-changes.jsonl          committed cell-level changes
-validation.json        deterministic and semantic checks
-audit.jsonl            append-only lifecycle events
-requests/              bounded model contexts and questions
-snapshots/             immutable dataset versions
-report.md              run summary
-decision_cards.md      human-readable decision evidence
-~~~
-
-Request references are verified against stored hashes during offline replay.
-Missing or modified evidence makes a decision non-replayable.
-
-## Reproducible demo and baseline
-
-Regenerate the seeded demo data and run the no-model baseline:
-
-~~~bash
-uv run python examples/generate_demo.py
-uv run python examples/run_baseline.py
-~~~
-
-Ground truth and the corruption manifest are used only by the evaluation
-command. They are never included in model context or candidate generation.
-The baseline uses the same deterministic profilers, candidate builders,
-executor, and hard validator, but makes no model calls.
-
-Recorded environment and live-API verification details are available in
-[docs/implementation_status.md](docs/implementation_status.md).
-
-## Development
-
-~~~bash
+```bash
 uv sync --locked
+uv run python scripts/check_environment.py
 uv run pytest -q
 uv run ruff check src tests examples scripts
-~~~
+```
 
-Tests use a clearly labeled deterministic fake client at the SDK boundary and
-make no external requests. Live Jev runs remain separate and are always marked
-with model_identity: real.
+Tests use a labeled fake client at the SDK boundary and make no API calls.
+The [implementation status](docs/implementation_status.md) records the
+verified environment, test results, live-demo measurements and limitations.
 
-Contributions that improve decision traceability, validator independence,
-configuration safety, or Jev integration are especially welcome. Please keep
-new behavior deterministic outside the model boundary, add regression tests,
-and document any change to decision semantics or policy thresholds.
+## Status and scope
 
-## Project status
+Jev Clean is an experimental v0.1 release, not certified for production or
+high-stakes data processing. Review its configuration, thresholds and proposed
+changes before using cleaned data downstream. It is an independent project
+built with the TypeSafe SDK, not an official TypeSafe product.
 
-jev-clean v0.1 is experimental. Its audit and rollback mechanisms are designed for
-inspection, but the software has not been certified for production or
-high-stakes data processing. Review configuration, policy thresholds, and
-generated changes before using results in downstream systems.
-
-## License
-
-jev-clean is available under the [MIT License](LICENSE).
+Licensed under [MIT](LICENSE).

@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">Jev Clean: explicit decisions for data cleaning</title>
+  <desc id="desc">A synthetic risk illustration compares two distributions with the same expected level of 0.40. A has no high-risk mass and passes the risk checks. B assigns 0.20 to high risk and abstains under the fixed 0.10 limit.</desc>
+  <rect width="1200" height="420" rx="24" fill="#F3F1E8"/>
+
+  <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', PingFang SC, sans-serif">
+    <text x="56" y="66" fill="#497065" font-size="19" font-weight="700" letter-spacing="2">DECISION-FIRST CSV CLEANING</text>
+    <path d="M56 86H1144" stroke="#CAD2C6" stroke-width="2"/>
+
+    <g id="project-title">
+      <text x="56" y="172" fill="#17332D" font-size="78" font-weight="700" letter-spacing="-2">Jev Clean</text>
+      <text x="58" y="229" fill="#294A42" font-size="27" font-weight="600">Local repair candidates.</text>
+      <text x="58" y="267" fill="#294A42" font-size="27" font-weight="600">Explicit probability decisions.</text>
+      <path d="M58 307H523" stroke="#AFC5B8" stroke-width="2"/>
+      <text x="58" y="345" fill="#497065" font-size="19">deterministic gate / versioned result</text>
+    </g>
+
+    <path d="M594 111V365" stroke="#CAD2C6" stroke-width="2"/>
+
+    <g id="risk-proof">
+      <text x="625" y="125" fill="#294A42" font-size="20" font-weight="700">SAME EXPECTED RISK: 0.40</text>
+      <text x="625" y="153" fill="#647B71" font-size="18">synthetic policy illustration</text>
+
+      <rect x="625" y="176" width="519" height="85" rx="13" fill="#FCFCF8" stroke="#C7D4C8" stroke-width="2"/>
+      <text x="647" y="231" fill="#17332D" font-size="38" font-weight="700">A</text>
+      <rect x="707" y="195" width="157" height="18" rx="4" fill="#188367"/>
+      <path d="M864 195H969V213H864Z" fill="#E6B655"/>
+      <text x="707" y="242" fill="#3B5C51" font-size="18">P(0/1/2): .60 / .40 / .00</text>
+      <text x="992" y="210" fill="#126A52" font-size="20" font-weight="700">RISK PASS</text>
+      <text x="992" y="238" fill="#497065" font-size="18">P(high) .00</text>
+
+      <rect x="625" y="277" width="519" height="85" rx="13" fill="#FCFCF8" stroke="#D7C7BE" stroke-width="2"/>
+      <text x="647" y="332" fill="#17332D" font-size="38" font-weight="700">B</text>
+      <rect x="707" y="296" width="210" height="18" rx="4" fill="#188367"/>
+      <path d="M917 296H969V314H917Z" fill="#B35D49"/>
+      <text x="707" y="343" fill="#3B5C51" font-size="18">P(0/1/2): .80 / .00 / .20</text>
+      <text x="992" y="311" fill="#A64B39" font-size="20" font-weight="700">ABSTAIN</text>
+      <text x="992" y="339" fill="#78574B" font-size="18">P(high) .20</text>
+    </g>
+
+    <text x="56" y="391" fill="#647B71" font-size="17">JEV CHOICE · NOUL · SCORE</text>
+    <text x="1144" y="391" fill="#647B71" font-size="17" text-anchor="end">fixed high-risk limit: 0.10</text>
+  </g>
+</svg>
