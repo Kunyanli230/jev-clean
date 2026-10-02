@@ -8,7 +8,8 @@ from typesafe_sdk import Choice, Noul, RetryPolicy, Score, TypeSafeClient
 
 
 def main() -> None:
-    assert sys.version_info[:2] == (3, 11), sys.version
+    assert (3, 11) <= sys.version_info[:2] < (3, 14), sys.version
+    print(f"Python: {sys.version.split()[0]}")
     for module, package in (
         ("pandas", "pandas"),
         ("pydantic", "pydantic"),

@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --locked --python ${{ matrix.python }}
+      - run: uv run --no-sync --python ${{ matrix.python }} python scripts/check_environment.py
+      - run: uv run --no-sync --python ${{ matrix.python }} pytest -q
+      - run: uv run --no-sync --python ${{ matrix.python }} ruff check src tests examples scripts
+      - run: uv build --python ${{ matrix.python }}
