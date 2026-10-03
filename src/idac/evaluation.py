@@ -11,8 +11,8 @@ import json
 from pathlib import Path
 from typing import Any
 
-from .config import NUMERIC_TYPES, TableConfig
-from .models import DatasetState, IssueCategory, IssueStatus, ModelStatus
+from .config import NUMERIC_TYPES, TableConfig, config_hash
+from .models import DatasetState, IssueCategory, IssueStatus, ModelStatus, RemovedRow, sha256_bytes
 from .policy import replay_decision, verify_request_evidence
 from .profiling import (
     ValueParseError,
@@ -22,7 +22,7 @@ from .profiling import (
     parse_date,
     parse_numeric,
 )
-from .storage import RunStore, load_truth_csv
+from .storage import RunStore, StorageError, load_csv, load_truth_csv
 
 
 def logical_value(raw: str | None, column) -> Any:
@@ -175,7 +175,9 @@ def evaluate_run(
         "baseline": None,
     }
     baseline = Path(baseline_dir) if baseline_dir else _default_baseline_dir(store)
-    if baseline and (baseline / "cleaned.csv").is_file():
+    if baseline:
+        if not (baseline / "cleaned.csv").is_file():
+            raise StorageError(f"baseline cleaned CSV not found: {baseline / 'cleaned.csv'}")
         metrics["baseline"] = _baseline_metrics(
             baseline,
             config,
@@ -411,27 +413,133 @@ def _baseline_metrics(
     truth_rows: list[list[str]],
     truth_index: dict[str, int],
 ) -> dict[str, Any]:
-    from .models import RemovedRow
-    from .storage import load_csv
-
     baseline_state = load_csv(baseline_dir / "cleaned.csv", config)
-    removed_path = baseline_dir / "removed_rows.csv"
-    if removed_path.is_file():
-        import csv as csv_module
+    summary_path = baseline_dir / "baseline.json"
+    snapshot_path = baseline_dir / "snapshot.json"
+    try:
+        summary = json.loads(summary_path.read_text(encoding="utf-8")) if summary_path.is_file() else {}
+        if summary and summary.get("config_hash") != config_hash(config):
+            raise StorageError("baseline configuration does not match the evaluated run")
+        if summary.get("input_hash") and summary["input_hash"] != original.input_hash:
+            raise StorageError("baseline input does not match the evaluated run")
+        if summary.get("artifact_version") == 2 and not snapshot_path.is_file():
+            raise StorageError("v0.2 baseline snapshot is missing")
+        if snapshot_path.is_file():
+            if summary.get("kind") != "rule_baseline" or summary.get("artifact_version") != 2:
+                raise StorageError("baseline snapshot requires a v0.2 rule-baseline manifest")
+            snapshot_bytes = snapshot_path.read_bytes()
+            if summary.get("snapshot_hash") != sha256_bytes(snapshot_bytes):
+                raise StorageError("baseline snapshot hash does not match baseline.json")
+            snapshot = DatasetState.model_validate_json(snapshot_bytes)
+            _validate_baseline_rows(snapshot, original, config)
+            exported_rows = [["" if value is None else value for value in row] for row in snapshot.rows]
+            if (
+                snapshot.ordered_columns != baseline_state.ordered_columns
+                or exported_rows != baseline_state.rows
+            ):
+                raise StorageError("baseline cleaned.csv does not match its snapshot")
+            if summary.get("input_hash") != snapshot.input_hash:
+                raise StorageError("baseline input hash does not match its snapshot")
+            if not (baseline_dir / "removed_rows.csv").is_file():
+                raise StorageError("v0.2 baseline removal ledger is missing")
+            exported_removed = _load_baseline_removed(baseline_dir, snapshot.ordered_columns)
+            if [
+                (row.row_id, row.reason, row.candidate_id, [value or None for value in row.values])
+                for row in exported_removed
+            ] != [
+                (row.row_id, row.reason, row.candidate_id, [value or None for value in row.values])
+                for row in snapshot.removed_rows
+            ]:
+                raise StorageError("baseline removed_rows.csv does not match its snapshot")
+            return _baseline_result(
+                snapshot, config, original, corruption, truth_rows, truth_index, "verified_snapshot"
+            )
+    except (OSError, ValueError, TypeError, AttributeError) as error:
+        raise StorageError(f"invalid baseline evidence: {error}") from error
 
+    # v0.1 exports have no snapshot. Original order and a complete removal ledger
+    # can recover identities; row numbers from cleaned.csv alone cannot.
+    baseline_state.removed_rows = _load_baseline_removed(baseline_dir, baseline_state.ordered_columns)
+    removed_ids = {removed.row_id for removed in baseline_state.removed_rows}
+    retained = [row_id for row_id in original.row_ids if row_id not in removed_ids]
+    if len(retained) != len(baseline_state.rows):
+        return {
+            "kind": "rule_baseline",
+            "cleaned": quality_counts(baseline_state, config),
+            "corruption": None,
+            "duplicates": None,
+            "removed_rows": len(baseline_state.removed_rows),
+            "row_mapping": "unavailable: legacy exports have no complete removal ledger",
+            "model_distribution_metrics": "N/A - rule baseline makes no probability calls",
+        }
+    baseline_state.row_ids = retained
+    baseline_state.input_hash = original.input_hash
+    _validate_baseline_rows(baseline_state, original, config)
+    return _baseline_result(
+        baseline_state, config, original, corruption, truth_rows, truth_index,
+        "legacy_removal_ledger (CSV cannot distinguish null from an empty string)",
+    )
+
+
+def _validate_baseline_rows(
+    state: DatasetState, original: DatasetState, config: TableConfig
+) -> None:
+    removed_ids = [removed.row_id for removed in state.removed_rows]
+    removed_set = set(removed_ids)
+    remaining = [row_id for row_id in original.row_ids if row_id not in removed_set]
+    if (
+        state.input_hash != original.input_hash
+        or state.schema != config.logical_schema()
+        or state.ordered_columns != original.ordered_columns
+        or len(removed_ids) != len(removed_set)
+        or not removed_set.issubset(original.row_ids)
+        or state.row_ids != remaining
+        or len(state.rows) != len(state.row_ids)
+        or any(len(row) != len(state.ordered_columns) for row in state.rows)
+    ):
+        raise StorageError("baseline snapshot row identities/schema do not match the original input")
+
+
+def _load_baseline_removed(baseline_dir: Path, columns: list[str]) -> list[RemovedRow]:
+    import csv
+
+    removed_path = baseline_dir / "removed_rows.csv"
+    if not removed_path.is_file():
+        return []
+    try:
         with removed_path.open(encoding="utf-8", newline="") as handle:
-            reader = csv_module.DictReader(handle)
-            baseline_state.removed_rows = [
+            reader = csv.reader(handle)
+            expected_header = ["row_id", "reason", "candidate_id", *columns]
+            if next(reader, None) != expected_header:
+                raise StorageError("baseline removal ledger has an invalid header")
+            rows = list(reader)
+            if any(len(row) != len(expected_header) for row in rows):
+                raise StorageError("baseline removal ledger has an invalid row length")
+            return [
                 RemovedRow(
-                    row_id=row["row_id"],
-                    values=[row.get(column) or None for column in baseline_state.ordered_columns],
-                    reason=row.get("reason", ""),
-                    candidate_id=row.get("candidate_id") or None,
+                    row_id=row[0],
+                    values=[value or None for value in row[3:]],
+                    reason=row[1],
+                    candidate_id=row[2] or None,
                 )
-                for row in reader
+                for row in rows
             ]
+    except (OSError, ValueError, KeyError, TypeError, csv.Error) as error:
+        raise StorageError(f"invalid baseline removal ledger: {error}") from error
+
+
+def _baseline_result(
+    baseline_state: DatasetState,
+    config: TableConfig,
+    original: DatasetState,
+    corruption: dict[str, Any],
+    truth_rows: list[list[str]],
+    truth_index: dict[str, int],
+    row_mapping: str,
+) -> dict[str, Any]:
     return {
         "kind": "rule_baseline",
+        "row_mapping": row_mapping,
         "cleaned": quality_counts(baseline_state, config),
         "corruption": _corruption_metrics(
             corruption, original, baseline_state, truth_rows, truth_index, config

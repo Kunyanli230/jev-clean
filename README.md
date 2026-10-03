@@ -11,7 +11,7 @@ applicability and semantic-risk distributions, then uses a fixed policy to
 decide what may be applied. The model neither writes executable repairs nor
 mutates the source CSV.
 
-`v0.1.0 experimental` · Python 3.11 · MIT · [independent project](#status-and-scope)
+`v0.2.0 experimental` · Python 3.11–3.13 · MIT · [independent project](#status-and-scope)
 
 ## Why keep the full distribution?
 
@@ -36,7 +36,7 @@ live model decisions can vary between runs.
 
 ## Run the demo
 
-Install [uv](https://docs.astral.sh/uv/) and use Python 3.11:
+Install [uv](https://docs.astral.sh/uv/) and use Python 3.11, 3.12 or 3.13:
 
 ```bash
 git clone https://github.com/Kunyanli230/jev-clean.git
@@ -45,8 +45,25 @@ uv sync --locked
 uv run idac --help
 ```
 
-The public project name is **Jev Clean**. The v0.1 Python package and CLI
-remain `idac`, so the commands below use that executable.
+The repository's default interpreter remains Python 3.11. To use an existing
+Python 3.12 environment, run `uv sync --locked --python 3.12` and add
+`--python 3.12` to `uv run` commands. CI checks all three supported versions.
+
+The public project name is **Jev Clean**. The Python package and CLI remain
+`idac`, so the commands below use that executable.
+
+Start offline by inspecting the input and its authorized repair previews:
+
+```bash
+uv run idac profile \
+  --input examples/data/dirty.csv \
+  --config configs/demo.yaml \
+  --output runs/input-profile.json
+```
+
+Use `--json` for the complete profile on stdout. Profiling leaves the original
+cells unchanged; its previews describe independent possibilities on that
+snapshot. Later candidates may become available after earlier repairs.
 
 The Jev-guided clean requires a TypeSafe API key. In Bash or WSL, enter it
 without adding its value to shell history:
@@ -71,13 +88,21 @@ of the committed snapshot; the input file is never overwritten. Choose a new
 output path for each run. Live API calls consume provider quota and may incur
 charges.
 
-Without an API key, run the **rule-only baseline** instead. It uses the local
+Without an API key, run the **rule-only baseline**. It uses the local
 candidate builders and validator but makes no Jev calls and has no probability
 decision records:
 
 ```bash
-uv run python examples/run_baseline.py --output runs/baseline-local
+uv run idac baseline \
+  --input examples/data/dirty.csv \
+  --config configs/demo.yaml \
+  --output runs/baseline-local
 ```
+
+The previous `examples/run_baseline.py` entry point still works. Baseline
+exports include a hashed snapshot that preserves row identities and nulls for
+evaluation, including when a duplicate was removed from the middle of a CSV.
+The baseline skips the Jev gate and semantic postcheck; it makes no model calls.
 
 ## How a repair reaches the output
 
@@ -99,7 +124,7 @@ See the [architecture](docs/architecture.md) for phase ordering, dependency
 blocking, budgets and exact component boundaries. The coordinator and
 executor are deterministic code, not extra model agents.
 
-## What v0.1 handles
+## What v0.2 handles
 
 - One UTF-8 CSV, up to 10,000 rows and 30 columns, with a required
   [YAML configuration](configs/demo.yaml).
@@ -109,6 +134,8 @@ executor are deterministic code, not extra model agents.
   fields are rejected.
 - Versioned snapshots, rollback, offline policy replay, and comparison with a
   deterministic rule baseline.
+- Offline profiling and a packaged rule-baseline command, with verifiable
+  baseline row identities and exported-data consistency checks.
 
 It does not perform fuzzy entity matching, free-text completion, unit
 conversion, model training or direct database mutation. IQR outlier flags are
@@ -156,12 +183,13 @@ uv run ruff check src tests examples scripts
 ```
 
 Tests use a labeled fake client at the SDK boundary and make no API calls.
-The [implementation status](docs/implementation_status.md) records the
-verified environment, test results, live-demo measurements and limitations.
+The [v0.2 development notes](docs/v0.2.md) record scope, acceptance checks and
+migration details. The [v0.1 implementation status](docs/implementation_status.md)
+retains its historical test and live-demo measurements.
 
 ## Status and scope
 
-Jev Clean is an experimental v0.1 release, not certified for production or
+Jev Clean is an experimental v0.2 release, not certified for production or
 high-stakes data processing. Review its configuration, thresholds and proposed
 changes before using cleaned data downstream. It is an independent project
 built with the TypeSafe SDK, not an official TypeSafe product.

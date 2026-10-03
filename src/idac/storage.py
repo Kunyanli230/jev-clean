@@ -106,7 +106,7 @@ def load_csv(path: str | Path, config: TableConfig) -> DatasetState:
             na_filter=False,
             encoding="utf-8",
         )
-    except (pd.errors.ParserError, UnicodeDecodeError) as error:
+    except (pd.errors.ParserError, pd.errors.EmptyDataError, UnicodeDecodeError) as error:
         raise StorageError(f"could not parse input CSV: {error}") from error
     if len(frame) > MAX_ROWS:
         raise StorageError(f"input has {len(frame)} rows, limit is {MAX_ROWS}")
@@ -144,7 +144,7 @@ def write_cleaned_csv(state: DatasetState, path: str | Path) -> None:
 
 def write_removed_csv(state: DatasetState, path: str | Path) -> None:
     header = ["row_id", "reason", "candidate_id", *state.ordered_columns]
-    lines = [",".join(header)]
+    lines = [",".join(_csv_cell(value) for value in header)]
     for removed in state.removed_rows:
         values = [removed.row_id, removed.reason, removed.candidate_id or ""]
         values.extend("" if cell is None else cell for cell in removed.values)

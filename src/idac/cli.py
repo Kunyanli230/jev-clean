@@ -1,4 +1,4 @@
-"""The four fixed CLI commands: clean, inspect, evaluate, rollback."""
+"""CSV profiling, explicit rule baseline, Jev cleaning and run inspection."""
 
 from __future__ import annotations
 
@@ -8,25 +8,88 @@ from pathlib import Path
 
 import typer
 
+from . import __version__
+from .baseline import run_baseline
 from .config import ConfigError
 from .evaluation import evaluate_run, integrity_metrics
 from .explanation import decision_card, render_card_markdown, render_decision_table
 from .models import DecisionTrace, ModelStatus, decision_from_log
 from .orchestrator import run_clean
 from .policy import replay_decision
+from .profile import profile_csv
 from .report import write_run_reports
 from .settings import API_KEY_ENV
-from .storage import RUN_FILES, RunStore, StorageError, load_run_config
+from .storage import RUN_FILES, RunStore, StorageError, atomic_write_text, load_run_config
 
 app = typer.Typer(
     add_completion=False,
-    help="IDAC - Interpretable Data Auto-Cleaner (Jev decision records included).",
+    no_args_is_help=True,
+    help="Jev Clean: inspect CSVs offline, run a rule baseline, or clean with Jev decisions.",
 )
+
+
+@app.callback(invoke_without_command=True)
+def main(
+    version: bool = typer.Option(False, "--version", is_eager=True, help="Show package version."),
+) -> None:
+    if version:
+        typer.echo(f"Jev Clean {__version__}")
+        raise typer.Exit()
 
 
 def _fail(message: str, code: int = 1) -> None:
     typer.echo(f"error: {message}", err=True)
     raise typer.Exit(code=code)
+
+
+@app.command()
+def profile(
+    input: Path = typer.Option(..., "--input", help="Input UTF-8 CSV path."),
+    config: Path = typer.Option(..., "--config", help="YAML configuration path."),
+    output: Path | None = typer.Option(None, "--output", help="New JSON profile file."),
+    json_output: bool = typer.Option(False, "--json", help="Print the complete JSON profile."),
+) -> None:
+    """Inspect original cells and authorized candidate previews; makes no model calls."""
+    if output is not None and output.exists():
+        _fail(f"output file already exists: {output}")
+    try:
+        result = profile_csv(input, config)
+    except (ConfigError, StorageError) as error:
+        _fail(str(error))
+    payload = json.dumps(result, indent=2, ensure_ascii=False) + "\n"
+    if output is not None:
+        atomic_write_text(output, payload)
+    if json_output:
+        typer.echo(payload, nl=False)
+        return
+    typer.echo(f"rows: {result['rows']}; columns: {len(result['columns'])}")
+    typer.echo(f"quality: {result['quality']}")
+    typer.echo(f"issues: {result['issue_counts']}; candidates: {result['candidate_count']}")
+    typer.echo(result["candidate_semantics"])
+    typer.echo("model calls: 0; probability distributions: N/A")
+    if output is not None:
+        typer.echo(f"profile: {output}")
+
+
+@app.command()
+def baseline(
+    input: Path = typer.Option(..., "--input", help="Input UTF-8 CSV path."),
+    config: Path = typer.Option(..., "--config", help="YAML configuration path."),
+    output: Path = typer.Option(..., "--output", help="New rule-baseline output directory."),
+) -> None:
+    """Apply authorized local rules with hard validation; no Jev gate or semantic postcheck."""
+    try:
+        summary = run_baseline(input, config, output)
+    except (ConfigError, StorageError) as error:
+        _fail(str(error))
+    typer.echo(
+        f"rows: {summary['rows']}; removed: {summary['removed_rows']}; "
+        f"commits: {summary['versions']}"
+    )
+    typer.echo("model calls: 0; probability distributions: N/A")
+    typer.echo(f"cleaned: {output / 'cleaned.csv'}")
+    if summary["hard_failures"]:
+        _fail(f"hard validation failures: {summary['hard_failures']}")
 
 
 @app.command()
@@ -142,7 +205,10 @@ def evaluate(
         config = load_run_config(store)
     except ConfigError as error:
         _fail(str(error))
-    metrics = evaluate_run(store, config, truth, baseline_dir=baseline)
+    try:
+        metrics = evaluate_run(store, config, truth, baseline_dir=baseline)
+    except StorageError as error:
+        _fail(str(error))
     # Refresh the run report so its evaluation summary reflects the version just scored.
     write_run_reports(store, config)
     typer.echo(f"version: {metrics['version']} (model identity: {metrics['model_identity']})")
@@ -183,6 +249,12 @@ def evaluate(
     )
     if metrics["baseline"]:
         baseline = metrics["baseline"]
+        if baseline["corruption"] is None:
+            typer.echo(
+                f"baseline quality: {baseline['cleaned']}; cell metrics: N/A "
+                f"({baseline['row_mapping']}); {baseline['model_distribution_metrics']}"
+            )
+            return
         typer.echo(
             f"baseline quality: {baseline['cleaned']}; corruption repair coverage "
             f"{_rate(baseline['corruption']['repair_coverage'])}; wrong modifications "
